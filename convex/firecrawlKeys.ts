@@ -1,5 +1,11 @@
 import { v } from "convex/values";
-import { mutation, query, internalQuery, internalMutation, action } from "./_generated/server";
+import {
+  mutation,
+  query,
+  internalQuery,
+  internalMutation,
+  action,
+} from "./_generated/server";
 import { requireCurrentUser, getCurrentUser } from "./helpers";
 import FirecrawlApp from "@mendable/firecrawl-js";
 
@@ -38,7 +44,10 @@ export const getUserFirecrawlKey = query({
       createdAt: apiKey.createdAt,
       updatedAt: apiKey.updatedAt,
       // Don't return the actual key for security
-      maskedKey: decryptKey(apiKey.encryptedKey).slice(0, 8) + '...' + decryptKey(apiKey.encryptedKey).slice(-4),
+      maskedKey:
+        decryptKey(apiKey.encryptedKey).slice(0, 8) +
+        "..." +
+        decryptKey(apiKey.encryptedKey).slice(-4),
     };
   },
 });
@@ -56,10 +65,12 @@ export const setFirecrawlKey = mutation({
     if (!trimmedKey || trimmedKey.length < 20) {
       throw new Error("Invalid API key format");
     }
-    
+
     // Firecrawl keys typically start with 'fc-'
-    if (!trimmedKey.startsWith('fc-')) {
-      throw new Error("Invalid Firecrawl API key format. Keys should start with 'fc-'");
+    if (!trimmedKey.startsWith("fc-")) {
+      throw new Error(
+        "Invalid Firecrawl API key format. Keys should start with 'fc-'"
+      );
     }
 
     // Check if user already has a key
@@ -70,13 +81,13 @@ export const setFirecrawlKey = mutation({
 
     const encryptedKey = encryptKey(trimmedKey);
     const now = Date.now();
-    
+
     // Debug: verify encryption/decryption works
     const testDecrypt = decryptKey(encryptedKey);
     if (testDecrypt !== trimmedKey) {
-      console.error("Encryption/decryption mismatch:", { 
-        original: trimmedKey.slice(0, 8) + "...", 
-        decrypted: testDecrypt.slice(0, 8) + "..." 
+      console.error("Encryption/decryption mismatch:", {
+        original: trimmedKey.slice(0, 8) + "...",
+        decrypted: testDecrypt.slice(0, 8) + "...",
       });
       throw new Error("Failed to encrypt API key properly");
     }
@@ -159,48 +170,60 @@ import { requireCurrentUserForAction } from "./helpers";
 
 // Action to get token usage from Firecrawl API
 export const getTokenUsage = action({
-  handler: async (ctx): Promise<{ success: boolean; error?: string; remaining_tokens?: number }> => {
+  handler: async (
+    ctx
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    remaining_tokens?: number;
+  }> => {
     const user = await requireCurrentUserForAction(ctx);
-    
+
     // Get user's API key
-    const keyData: any = await ctx.runQuery(internal.firecrawlKeys.getDecryptedFirecrawlKey, { 
-      userId: user 
-    });
-    
+    const keyData: any = await ctx.runQuery(
+      internal.firecrawlKeys.getDecryptedFirecrawlKey,
+      {
+        userId: user,
+      }
+    );
+
     if (!keyData || !keyData.key) {
       return {
         success: false,
-        error: "No API key found"
+        error: "No API key found",
       };
     }
 
     try {
-      const response: Response = await fetch('https://api.firecrawl.dev/v1/team/credit-usage', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${keyData.key}`,
-          'Content-Type': 'application/json'
+      const response: Response = await fetch(
+        "https://api.firecrawl.dev/v1/team/credit-usage",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${keyData.key}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         const errorData: any = await response.json();
         return {
           success: false,
-          error: errorData.error || `API error: ${response.status}`
+          error: errorData.error || `API error: ${response.status}`,
         };
       }
 
       const data: any = await response.json();
       return {
         success: true,
-        remaining_tokens: data.data?.remaining_credits
+        remaining_tokens: data.data?.remaining_credits,
       };
     } catch (error) {
       console.error("Failed to fetch token usage:", error);
       return {
         success: false,
-        error: "Failed to fetch token usage"
+        error: "Failed to fetch token usage",
       };
     }
   },

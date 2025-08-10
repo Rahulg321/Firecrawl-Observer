@@ -15,7 +15,7 @@ export const checkActiveWebsites = internalAction({
     for (const website of websites) {
       try {
         // Remove verbose per-website logging
-        
+
         if (website.monitorType === "full_site") {
           // For full site monitors, perform a crawl
           await ctx.scheduler.runAfter(0, internal.crawl.performCrawl, {
@@ -54,7 +54,7 @@ export const getWebsitesToCheck = internalQuery({
       if (website.isPaused) {
         return false;
       }
-      
+
       if (!website.lastChecked) {
         // Never checked before
         return true;
@@ -69,4 +69,3 @@ export const getWebsitesToCheck = internalQuery({
     return websitesToCheck;
   },
 });
-

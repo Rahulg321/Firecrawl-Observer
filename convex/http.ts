@@ -22,33 +22,36 @@ http.route({
     }
 
     const token = authHeader.substring(7);
-    
+
     // Validate API key and get user
-    const user = await ctx.runMutation(internal.apiKeys.validateApiKeyAndGetUser, { apiKey: token });
-    
+    const user = await ctx.runMutation(
+      internal.apiKeys.validateApiKeyAndGetUser,
+      { apiKey: token }
+    );
+
     if (!user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid API key" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid API key" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     try {
       const body = await request.json();
       const isBatch = Array.isArray(body);
-      
+
       if (isBatch) {
         const results = [];
         const errors = [];
 
         for (let i = 0; i < body.length; i++) {
           const website = body[i];
-          
+
           if (!website.url) {
             errors.push({
               index: i,
               url: website.url || "not provided",
-              error: "Missing required field: url"
+              error: "Missing required field: url",
             });
             continue;
           }
@@ -70,25 +73,33 @@ http.route({
             }
 
             // Set defaults
-            const monitorType = website.type === "crawl" ? "full_site" : "single_page";
+            const monitorType =
+              website.type === "crawl" ? "full_site" : "single_page";
             const checkInterval = website.checkInterval || 60;
             const notificationPreference = website.webhook ? "webhook" : "none";
             const crawlLimit = website.crawlLimit || 5;
             const crawlDepth = website.crawlDepth || 3;
-            const name = website.name || hostname.charAt(0).toUpperCase() + hostname.slice(1);
+            const name =
+              website.name ||
+              hostname.charAt(0).toUpperCase() + hostname.slice(1);
 
             // Create the website
-            const websiteId = await ctx.runMutation(internal.websites.createWebsiteFromApi, {
-              userId: user._id,
-              url: processedUrl,
-              name: name,
-              checkInterval: checkInterval,
-              notificationPreference: notificationPreference,
-              webhookUrl: website.webhook || undefined,
-              monitorType: monitorType,
-              crawlLimit: monitorType === "full_site" ? crawlLimit : undefined,
-              crawlDepth: monitorType === "full_site" ? crawlDepth : undefined,
-            });
+            const websiteId = await ctx.runMutation(
+              internal.websites.createWebsiteFromApi,
+              {
+                userId: user._id,
+                url: processedUrl,
+                name: name,
+                checkInterval: checkInterval,
+                notificationPreference: notificationPreference,
+                webhookUrl: website.webhook || undefined,
+                monitorType: monitorType,
+                crawlLimit:
+                  monitorType === "full_site" ? crawlLimit : undefined,
+                crawlDepth:
+                  monitorType === "full_site" ? crawlDepth : undefined,
+              }
+            );
 
             results.push({
               index: i,
@@ -103,7 +114,7 @@ http.route({
             errors.push({
               index: i,
               url: website.url,
-              error: error.message
+              error: error.message,
             });
           }
         }
@@ -116,7 +127,7 @@ http.route({
             errors: errors.length > 0 ? errors : undefined,
             total: body.length,
             successful: results.length,
-            failed: errors.length
+            failed: errors.length,
           }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
@@ -141,10 +152,10 @@ http.route({
           const urlObj = new URL(processedUrl);
           hostname = urlObj.hostname.replace("www.", "");
         } catch {
-          return new Response(
-            JSON.stringify({ error: "Invalid URL format" }),
-            { status: 400, headers: { "Content-Type": "application/json" } }
-          );
+          return new Response(JSON.stringify({ error: "Invalid URL format" }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          });
         }
 
         // Set defaults
@@ -153,20 +164,24 @@ http.route({
         const notificationPreference = body.webhook ? "webhook" : "none";
         const crawlLimit = body.crawlLimit || 5;
         const crawlDepth = body.crawlDepth || 3;
-        const name = body.name || hostname.charAt(0).toUpperCase() + hostname.slice(1);
+        const name =
+          body.name || hostname.charAt(0).toUpperCase() + hostname.slice(1);
 
         // Create the website
-        const websiteId = await ctx.runMutation(internal.websites.createWebsiteFromApi, {
-          userId: user._id,
-          url: processedUrl,
-          name: name,
-          checkInterval: checkInterval,
-          notificationPreference: notificationPreference,
-          webhookUrl: body.webhook || undefined,
-          monitorType: monitorType,
-          crawlLimit: monitorType === "full_site" ? crawlLimit : undefined,
-          crawlDepth: monitorType === "full_site" ? crawlDepth : undefined,
-        });
+        const websiteId = await ctx.runMutation(
+          internal.websites.createWebsiteFromApi,
+          {
+            userId: user._id,
+            url: processedUrl,
+            name: name,
+            checkInterval: checkInterval,
+            notificationPreference: notificationPreference,
+            webhookUrl: body.webhook || undefined,
+            monitorType: monitorType,
+            crawlLimit: monitorType === "full_site" ? crawlLimit : undefined,
+            crawlDepth: monitorType === "full_site" ? crawlDepth : undefined,
+          }
+        );
 
         return new Response(
           JSON.stringify({
@@ -181,7 +196,7 @@ http.route({
               webhook: body.webhook || null,
               crawlLimit: monitorType === "full_site" ? crawlLimit : null,
               crawlDepth: monitorType === "full_site" ? crawlDepth : null,
-            }
+            },
           }),
           { status: 200, headers: { "Content-Type": "application/json" } }
         );
@@ -189,7 +204,10 @@ http.route({
     } catch (error: any) {
       console.error("API error:", error);
       return new Response(
-        JSON.stringify({ error: "Internal server error", details: error.message }),
+        JSON.stringify({
+          error: "Internal server error",
+          details: error.message,
+        }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -214,10 +232,10 @@ http.route({
 
       // Make the webhook request from the HTTP action
       const response = await fetch(targetUrl, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'Firecrawl-Observer/1.0',
+          "Content-Type": "application/json",
+          "User-Agent": "Firecrawl-Observer/1.0",
         },
         body: JSON.stringify(payload),
       });
@@ -231,15 +249,18 @@ http.route({
           statusText: response.statusText,
           response: responseText,
         }),
-        { 
+        {
           status: response.ok ? 200 : 500,
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
         }
       );
     } catch (error: any) {
       console.error("Webhook proxy error:", error);
       return new Response(
-        JSON.stringify({ error: "Failed to proxy webhook", details: error.message }),
+        JSON.stringify({
+          error: "Failed to proxy webhook",
+          details: error.message,
+        }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -261,20 +282,23 @@ http.route({
     }
 
     const token = authHeader.substring(7);
-    
+
     // Validate API key and get user
-    const user = await ctx.runMutation(internal.apiKeys.validateApiKeyAndGetUser, { apiKey: token });
-    
+    const user = await ctx.runMutation(
+      internal.apiKeys.validateApiKeyAndGetUser,
+      { apiKey: token }
+    );
+
     if (!user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid API key" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid API key" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     try {
       const body = await request.json();
-      
+
       if (!body.websiteId) {
         return new Response(
           JSON.stringify({ error: "Missing required field: websiteId" }),
@@ -283,13 +307,16 @@ http.route({
       }
 
       const isPaused = body.paused === true;
-      
+
       // Update the website pause status
-      const result = await ctx.runMutation(internal.websites.pauseWebsiteFromApi, {
-        userId: user._id,
-        websiteId: body.websiteId,
-        isPaused: isPaused
-      });
+      const result = await ctx.runMutation(
+        internal.websites.pauseWebsiteFromApi,
+        {
+          userId: user._id,
+          websiteId: body.websiteId,
+          isPaused: isPaused,
+        }
+      );
 
       if (!result) {
         return new Response(
@@ -301,16 +328,19 @@ http.route({
       return new Response(
         JSON.stringify({
           success: true,
-          message: `Website ${isPaused ? 'paused' : 'resumed'} successfully`,
+          message: `Website ${isPaused ? "paused" : "resumed"} successfully`,
           websiteId: body.websiteId,
-          isPaused: isPaused
+          isPaused: isPaused,
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     } catch (error: any) {
       console.error("API error:", error);
       return new Response(
-        JSON.stringify({ error: "Internal server error", details: error.message }),
+        JSON.stringify({
+          error: "Internal server error",
+          details: error.message,
+        }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -332,20 +362,23 @@ http.route({
     }
 
     const token = authHeader.substring(7);
-    
+
     // Validate API key and get user
-    const user = await ctx.runMutation(internal.apiKeys.validateApiKeyAndGetUser, { apiKey: token });
-    
+    const user = await ctx.runMutation(
+      internal.apiKeys.validateApiKeyAndGetUser,
+      { apiKey: token }
+    );
+
     if (!user) {
-      return new Response(
-        JSON.stringify({ error: "Invalid API key" }),
-        { status: 401, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ error: "Invalid API key" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     try {
       const body = await request.json();
-      
+
       if (!body.websiteId) {
         return new Response(
           JSON.stringify({ error: "Missing required field: websiteId" }),
@@ -354,10 +387,13 @@ http.route({
       }
 
       // Delete the website
-      const result = await ctx.runMutation(internal.websites.deleteWebsiteFromApi, {
-        userId: user._id,
-        websiteId: body.websiteId
-      });
+      const result = await ctx.runMutation(
+        internal.websites.deleteWebsiteFromApi,
+        {
+          userId: user._id,
+          websiteId: body.websiteId,
+        }
+      );
 
       if (!result) {
         return new Response(
@@ -370,14 +406,17 @@ http.route({
         JSON.stringify({
           success: true,
           message: "Website deleted successfully",
-          websiteId: body.websiteId
+          websiteId: body.websiteId,
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
     } catch (error: any) {
       console.error("API error:", error);
       return new Response(
-        JSON.stringify({ error: "Internal server error", details: error.message }),
+        JSON.stringify({
+          error: "Internal server error",
+          details: error.message,
+        }),
         { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }

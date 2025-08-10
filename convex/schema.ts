@@ -4,7 +4,7 @@ import { v } from "convex/values";
 
 const schema = defineSchema({
   ...authTables,
-  
+
   // API Keys
   apiKeys: defineTable({
     userId: v.id("users"),
@@ -23,8 +23,7 @@ const schema = defineSchema({
     lastUsed: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"]),
+  }).index("by_user", ["userId"]),
 
   // Website monitoring tables
   websites: defineTable({
@@ -35,17 +34,18 @@ const schema = defineSchema({
     isPaused: v.optional(v.boolean()), // For manual pause separate from isActive
     checkInterval: v.number(), // in minutes
     lastChecked: v.optional(v.number()),
-    notificationPreference: v.optional(v.union(
-      v.literal("none"),
-      v.literal("email"),
-      v.literal("webhook"),
-      v.literal("both")
-    )),
+    notificationPreference: v.optional(
+      v.union(
+        v.literal("none"),
+        v.literal("email"),
+        v.literal("webhook"),
+        v.literal("both")
+      )
+    ),
     webhookUrl: v.optional(v.string()),
-    monitorType: v.optional(v.union(
-      v.literal("single_page"),
-      v.literal("full_site")
-    )),
+    monitorType: v.optional(
+      v.union(v.literal("single_page"), v.literal("full_site"))
+    ),
     crawlLimit: v.optional(v.number()), // max pages to crawl
     crawlDepth: v.optional(v.number()), // max depth to crawl
     lastCrawlAt: v.optional(v.number()),
@@ -75,18 +75,22 @@ const schema = defineSchema({
     title: v.optional(v.string()),
     description: v.optional(v.string()),
     url: v.optional(v.string()), // The actual URL that was scraped
-    diff: v.optional(v.object({
-      text: v.string(),
-      json: v.any(),
-    })),
+    diff: v.optional(
+      v.object({
+        text: v.string(),
+        json: v.any(),
+      })
+    ),
     // AI Analysis results
-    aiAnalysis: v.optional(v.object({
-      meaningfulChangeScore: v.number(), // 0-100
-      isMeaningfulChange: v.boolean(),
-      reasoning: v.string(),
-      analyzedAt: v.number(),
-      model: v.string(),
-    })),
+    aiAnalysis: v.optional(
+      v.object({
+        meaningfulChangeScore: v.number(), // 0-100
+        isMeaningfulChange: v.boolean(),
+        reasoning: v.string(),
+        analyzedAt: v.number(),
+        model: v.string(),
+      })
+    ),
   })
     .index("by_website", ["websiteId"])
     .index("by_website_time", ["websiteId", "scrapedAt"])
@@ -94,6 +98,7 @@ const schema = defineSchema({
 
   changeAlerts: defineTable({
     websiteId: v.id("websites"),
+
     userId: v.id("users"),
     scrapeResultId: v.id("scrapeResults"),
     changeType: v.string(),
@@ -117,7 +122,7 @@ const schema = defineSchema({
     .index("by_user", ["userId"])
     .index("by_email", ["email"])
     .index("by_token", ["verificationToken"]),
-    
+
   // User settings for defaults
   userSettings: defineTable({
     userId: v.id("users"),
@@ -136,8 +141,7 @@ const schema = defineSchema({
     webhookOnlyIfMeaningful: v.optional(v.boolean()), // only send webhook if AI deems meaningful
     createdAt: v.number(),
     updatedAt: v.number(),
-  })
-    .index("by_user", ["userId"]),
+  }).index("by_user", ["userId"]),
 
   webhookPlayground: defineTable({
     payload: v.any(),
@@ -147,8 +151,7 @@ const schema = defineSchema({
     receivedAt: v.number(),
     status: v.string(),
     response: v.optional(v.any()),
-  })
-    .index("by_time", ["receivedAt"]),
+  }).index("by_time", ["receivedAt"]),
 
   crawlSessions: defineTable({
     websiteId: v.id("websites"),

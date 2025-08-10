@@ -4,8 +4,9 @@ import { requireCurrentUser, getCurrentUser } from "./helpers";
 
 // Generate a random API key
 function generateApiKey(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let key = 'fc_';
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let key = "fc_";
   for (let i = 0; i < 32; i++) {
     key += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -27,7 +28,7 @@ export const getUserApiKeys = query({
       .collect();
 
     // Don't return the full key for security, just the first and last few characters
-    return apiKeys.map(key => ({
+    return apiKeys.map((key) => ({
       _id: key._id,
       name: key.name,
       keyPreview: `${key.key.slice(0, 7)}...${key.key.slice(-4)}`,
@@ -44,19 +45,19 @@ export const createApiKey = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireCurrentUser(ctx);
-    
+
     // Check if user already has 5 API keys
     const existingKeys = await ctx.db
       .query("apiKeys")
       .withIndex("by_user", (q) => q.eq("userId", user._id))
       .collect();
-    
+
     if (existingKeys.length >= 5) {
       throw new Error("Maximum of 5 API keys allowed per user");
     }
 
     const apiKey = generateApiKey();
-    
+
     const keyId = await ctx.db.insert("apiKeys", {
       userId: user._id,
       key: apiKey,
@@ -80,7 +81,7 @@ export const deleteApiKey = mutation({
   },
   handler: async (ctx, args) => {
     const user = await requireCurrentUser(ctx);
-    
+
     const apiKey = await ctx.db.get(args.keyId);
     if (!apiKey || apiKey.userId !== user._id) {
       throw new Error("API key not found");
@@ -98,7 +99,7 @@ export const validateApiKeyAndGetUser = internalMutation({
       .query("apiKeys")
       .withIndex("by_key", (q) => q.eq("key", args.apiKey))
       .first();
-    
+
     if (!keyRecord) {
       return null;
     }
