@@ -36,6 +36,7 @@ import { APP_CONFIG } from "@/config/app.config";
 import { validateEmail, validatePassword } from "@/lib/validation";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import Image from "next/image";
 
 // Helper function to format interval display
 function formatInterval(minutes: number | undefined): string {
@@ -1597,9 +1598,11 @@ export default function HomePage() {
                                   {/* Website favicon */}
                                   <div className="flex-shrink-0">
                                     {getFaviconUrl(website.url) ? (
-                                      <img
+                                      <Image
                                         src={getFaviconUrl(website.url)}
                                         alt={website.name}
+                                        width={48}
+                                        height={48}
                                         className="w-12 h-12 object-contain rounded-lg bg-gray-50 p-2"
                                         onError={(e) => {
                                           e.currentTarget.style.display =
@@ -1956,9 +1959,11 @@ export default function HomePage() {
                                 <div className="flex-shrink-0">
                                   {scrape.websiteUrl &&
                                   getFaviconUrl(scrape.websiteUrl) ? (
-                                    <img
+                                    <Image
                                       src={getFaviconUrl(scrape.websiteUrl)}
                                       alt={scrape.websiteName}
+                                      width={32}
+                                      height={32}
                                       className="w-8 h-8 object-contain rounded bg-gray-50 p-1"
                                       onError={(e) => {
                                         e.currentTarget.style.display = "none";
