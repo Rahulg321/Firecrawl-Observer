@@ -2283,6 +2283,7 @@ export default function HomePage() {
                 setPendingWebsite(null);
               } catch (error: any) {
                 // eslint-disable-line @typescript-eslint/no-explicit-any
+
                 setError(error.message || "Failed to add website");
               } finally {
                 setIsAdding(false);
