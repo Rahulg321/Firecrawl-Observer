@@ -107,7 +107,11 @@ export const sendVerificationEmail = internalAction({
       return;
     }
 
+    console.log("next public app url is", process.env.NEXT_PUBLIC_APP_URL);
+
     const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/verify-email?token=${args.token}`;
+
+    console.log("Verification url generated is ", verificationUrl);
 
     try {
       const response = await fetch("https://api.resend.com/emails", {
